@@ -8,6 +8,17 @@ import requests
 import json
 import base64
 import CRCUtil 
+from types import MethodType
+
+
+class default_cmd(object):
+    def __init__(self, parent, name):
+        self.parent = parent
+        self.name = name
+        
+    def __call__(self, cmd_args=""):
+        print self.parent.send_cmd("{} {}".format(self.name, cmd_args))
+ 
 
 class wiconnectpy(object):
     '''
@@ -19,15 +30,14 @@ class wiconnectpy(object):
         '''
         Constructor
         '''
-        self.addr = addr
         self.timeout = timeout
         self.retries = retries
         self.data_buffer = ""
-
-    
-    def __call__(self, cmd_string, data=""):
-        self.url = "http://" + self.addr + "/command"
+        self.url = "http://" + addr + "/command"
         
+        self.create_helper_function()
+        
+    def __call__(self, cmd_string, data=""):
         cmd = cmd_string.split()[0]
         cmd_args = cmd_string.split()[1:]
         
@@ -42,7 +52,21 @@ class wiconnectpy(object):
             return self.send_write_cmd(cmd_args[0], cmd_args[1], data)
         else:
             return self.send_cmd(cmd_string, data)             
-        
+
+    # Dynamically create functions
+    def create_helper_function(self):
+        funcs = self.send_cmd("help commands")
+        if not funcs:
+            return False
+        funcs = funcs.replace(" ", "").split('\r\n')
+        for func in funcs:
+            #print func.split(":")
+            full_func = func.split(":")[0]
+            short_func = func.split(":")[1]
+            setattr(self.__class__, full_func, default_cmd(self, full_func))
+            
+            if short_func != full_func:
+                setattr(self.__class__, short_func, default_cmd(self, short_func))        
         
     def send_cmd(self, command, data=""):
         try:
