@@ -91,33 +91,77 @@ class wiconnectpy(object):
         return resp    
             
     def send_fcr_cmd(self, cmd_args, data):
-        #Find and validate the file size  
-        cmd_string = "fcr -o "
-        for i in range(len(cmd_args)):
-            cmd_string += cmd_args[i] + ' '
-        
-        if self.get_fcr_size(cmd_args) != len(data):
+
+        file_info = self.parse_fcr_args(cmd_args)
+        if int(file_info["size"]) != len(data):
             print "Invalid file size"
             return ""
         
-        print "CRC:{:x}".format(CRCUtil.crc16(str(data)))
+        crc = hex(CRCUtil.crc16(str(data)))
+        if not file_info["crc"]:
+            file_info["crc"] = crc
+        elif str(crc) != file_info["crc"]:
+            print "Invalid CRC"
+            return ""
+
+        # Reconstruct command string with updated arguments
+        cmd_string = "fcr -o "
+        if file_info["unprotect"] and file_info["essential"]:
+            cmd_string += " -ue"
+        else:
+            if file_info["unprotect"]:
+                cmd_string += " -u"
+            elif  file_info["unprotect"]:
+                cmd_string += " -e"
+        if file_info["stream"]:
+            cmd_string += " -o"
+        
+        cmd_string += " {} {} {} {} {}".format(file_info["name"], file_info["size"], file_info["version"], file_info["type"], file_info["crc"])
+        print cmd_string
 
         stream_handle = self.send_cmd(cmd_string)
         resp = self.send_write_cmd(stream_handle, len(data), data)
         return resp
+           
+           
+    def parse_fcr_args(self, cmd_args):                    
+        # file_create [-[e][u]] [-o] <filename> <size> [<version> [<type> [<crc>]]]  
+        file_info = {"essential":False, "unprotect":False, "stream":False, "name":"", "size":"0", "version":"1.0.0", "type": "0xFE", "crc":""}
+
+          
+        if "-o" in cmd_args != -1:
+            file_info["stream"] = True
+        if "-u" in cmd_args != -1:
+            file_info["unprotect"] = True
+        if "-e" in cmd_args != -1:
+            file_info["essential"] = True
+        if ("-eu" in cmd_args != -1) or ("-ue" in cmd_args):
+            file_info["essential"] = True
+            file_info["unprotect"] = True            
                     
-    def get_fcr_size(self, cmd_args):    
         for i in range(len(cmd_args)):
             # Find first args that doenst have a "-" is it
             if cmd_args[i][0] != '-':
-                if (i+1) < len(cmd_args):
-                    try:
-                        int(cmd_args[i+1])
-                        return int(cmd_args[i+1])
-                    except TypeError:
-                        print "Invalid file size"
-                        return False
-        return False
+                #get all non flag args
+                a = cmd_args[i:]
+                
+                file_info["name"] = a[0]
+                file_info["size"] = a[1]
+                try:
+                    file_info["version"] = a[2]
+                except IndexError:
+                    pass
+                try:
+                    file_info["type"] = a[3]
+                except IndexError:
+                    pass
+                try:
+                    file_info["crc"] = a[4] 
+                except IndexError:
+                    pass               
+                break
+            
+        return file_info
             
             
 if __name__ == "__main__":
@@ -125,7 +169,7 @@ if __name__ == "__main__":
     a = wiconnectpy(sys.argv[1])
     
     if 0:
-        f = "test_file.txt"
+        f = "Redefining_the_Power_Benchmark.pdf"
         d = open(f, "rb").read()
         print a("fcr {} {}".format(f, len(d)), d)
         sys.exit(0)
@@ -145,10 +189,14 @@ if __name__ == "__main__":
                 if ((cmd == "fcr" or cmd == "file_create") and (cmd_string.find("-o") == -1)) or (cmd == "write" or cmd == "stream_write"):
                     #capture cmd_string
                     if (cmd == "fcr" or cmd == "file_create"):
-                        data_size = a.get_fcr_size(cmd_args)
+                        file_info = a.parse_fcr_args(cmd_args)
+                        data_size = int(file_info["size"])
                     else:
                         data_size = int(cmd_args[1])
                     data = ""
+                    # Capture data
+                    # could add a timeout or escape option here
+                    # not that the msvcrt.getwch only works for Windows.  Can use sys.stdin.read(1) for linux
                     while len(data) < int(data_size):
                         cmd_chr = msvcrt.getwch()
                         data += cmd_chr
