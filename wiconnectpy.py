@@ -7,7 +7,7 @@ import sys
 import requests
 import json
 import base64
-
+import CRCUtil 
 
 class wiconnectpy(object):
     '''
@@ -49,6 +49,8 @@ class wiconnectpy(object):
             a = requests.post(self.url,  data=json.dumps({"command": base64.b64encode(command), "flags":0x7, "data": base64.b64encode(data)}), headers={"content-type":"application/json", "accepts":"application/json"})  
             if a.status_code == 200:
                 return base64.b64decode(a.json()["response"]).rstrip()
+            else:
+                print "Error: {}".format(a.status_code), a.text
 
         except requests.exceptions.ConnectionError:
             print "Error connecting to {}".format(self.url)
@@ -97,6 +99,8 @@ class wiconnectpy(object):
         if self.get_fcr_size(cmd_args) != len(data):
             print "Invalid file size"
             return ""
+        
+        print "CRC:{:x}".format(CRCUtil.crc16(str(data)))
 
         stream_handle = self.send_cmd(cmd_string)
         resp = self.send_write_cmd(stream_handle, len(data), data)
@@ -104,6 +108,7 @@ class wiconnectpy(object):
                     
     def get_fcr_size(self, cmd_args):    
         for i in range(len(cmd_args)):
+            # Find first args that doenst have a "-" is it
             if cmd_args[i][0] != '-':
                 if (i+1) < len(cmd_args):
                     try:
@@ -119,6 +124,12 @@ if __name__ == "__main__":
     import msvcrt
     a = wiconnectpy(sys.argv[1])
     
+    if 0:
+        f = "test_file.txt"
+        d = open(f, "rb").read()
+        print a("fcr {} {}".format(f, len(d)), d)
+        sys.exit(0)
+        
     prompt = "> "
     
     print "Interactive Network Mode"
@@ -144,7 +155,8 @@ if __name__ == "__main__":
                     resp = a(cmd_string, data)
                     sys.stdout.write(resp)
                 else:
-                    sys.stdout.write(a(cmd_string))
+                    resp = a(cmd_string)
+                    sys.stdout.write("{}".format(resp))
                 sys.stdout.write("\n" + prompt)
             else:
                 sys.stdout.write(prompt)
