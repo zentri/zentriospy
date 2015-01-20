@@ -8,7 +8,7 @@ import requests
 import json
 import base64
 import CRCUtil 
-from types import MethodType
+
 
 
 class default_cmd(object):
@@ -16,8 +16,8 @@ class default_cmd(object):
         self.parent = parent
         self.name = name
         
-    def __call__(self, cmd_args=""):
-        print self.parent.send_cmd("{} {}".format(self.name, cmd_args))
+    def __call__(self, cmd_args="", data=""):
+        print self.parent.send_cmd("{} {}".format(self.name, cmd_args), data)
  
 
 class wiconnectpy(object):
