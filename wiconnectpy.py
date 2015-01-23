@@ -9,8 +9,6 @@ import json
 import base64
 import CRCUtil 
 
-
-
 class default_cmd(object):
     def __init__(self, parent, name):
         self.parent = parent
@@ -70,7 +68,7 @@ class wiconnectpy(object):
         
     def send_cmd(self, command, data=""):
         try:
-            a = requests.post(self.url,  data=json.dumps({"command": base64.b64encode(command), "flags":0x7, "data": base64.b64encode(data)}), headers={"content-type":"application/json", "accepts":"application/json"})  
+            a = requests.post(self.url,  data=json.dumps({"command": base64.b64encode(command), "flags":0x7, "data": base64.b64encode(data)}), headers={"content-type":"application/json", "accepts":"application/json"}, timeout=10)  
             if a.status_code == 200:
                 return base64.b64decode(a.json()["response"]).rstrip()
             else:
