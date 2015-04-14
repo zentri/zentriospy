@@ -15,7 +15,7 @@ i = 0
 ecount = 0
 while 1:
     f = open("test.log", "a")
-    sys.stdout.write("\rCount:{}\tErorrs:{}".format(i,ecount))
+    sys.stdout.write("\rCount:{}\tErrors:{}".format(i,ecount))
     cmd = cmd_list[random.randint(0, len(cmd_list)-1)]
     for cmd_step in cmd:
         f.write("%%%%%%% {}\n".format(cmd_step))
@@ -25,7 +25,7 @@ while 1:
         
         if r == "":
             ecount = ecount + 1
-            f.write("%%%%%%% ERROR or not responce\n")
+            f.write("%%%%%%% ERROR or no response\n")
         else:            
             i = i + 1
     time.sleep(random.randint(0, 500)/100)
