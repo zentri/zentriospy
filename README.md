@@ -11,7 +11,7 @@ To install wiconnectpy, obtain a working copy from:
 https://bitbucket.org/ackme/wiconnectpy
 
 The wiconnectpy module requires the non-standard but commonly used python requests module. Install with pip or similar:
-<pre>pip install requests</pre>
+```pip install requests```
 
 ## Setting up the ACKme WiConnect Module
 
