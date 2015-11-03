@@ -1,21 +1,21 @@
-# The wiconnectpy module
+# The zentriospy module
 
-The wiconnectpy module is for communicating with a WiConnect module via the WiConnect HTTP RESTful server.
+The zentriospy module is for communicating with a ZentriOS module via the ZentriOS HTTP RESTful server.
 
 It is written for python 2.7.
 
-## Installing wiconnectpy
+## Installing zentriospy
 
-To install wiconnectpy, obtain a working copy from:
+To install zentriospy, obtain a working copy from:
 
-https://bitbucket.org/ackme/wiconnectpy
+https://github.com/zentri/zentriospy
 
-The wiconnectpy module requires the non-standard but commonly used python requests module. Install with pip or similar:
+The zentriospy module requires the non-standard but commonly used python requests module. Install with pip or similar:
 ```pip install requests```
 
-## Setting up the ACKme WiConnect Module
+## Setting up the ZentriOS Module
 
-To set up your module to run the HTTP RESTful server, issue the following commands in a WiConnect terminal connected to your module:
+To set up your module to run the HTTP RESTful server, issue the following commands in a serial terminal connected to your module:
 
 ```
 set wlan.ssid               <YOUR SSID>
@@ -33,9 +33,9 @@ The module response is similar to:
 ```
 Rebooting
 [Disassociated]
-WiConnect-2.2.0.12, Built:2015-04-08 20:12:21 for AMW004.3, Board:AMW004-E03.3
+ZentriOS-2.2.0.12, Built:2015-04-08 20:12:21 for AMW004.3, Board:AMW004-E03.3
 [Ready]
-[Associating to ackme]
+[Associating to zentri]
 > Security type from probe: WPA2-AES
 Obtaining IPv4 address via DHCP
 IPv4 address: 10.5.6.108
@@ -45,29 +45,29 @@ HTTP and REST API server listening on port: 80
 [Associated]
 ```
 
-The module now accepts HTTP requests from wiconnectpy.
+The module now accepts HTTP requests from zentriospy.
 
-## Running wiconnectpy
+## Running zentriospy
 
-The wiconnectpy module runs in three possible modes:
+The zentriospy module runs in three possible modes:
 
 * Interactive network mode
 * Class mode with raw commands
 * Class mode with structured commands
 
-See (WiConnect online documentation)[http://wiconnect.ack.me] for full WiConnect documentation, including a complete description of all commands and variables.
+See (ZentriOS online documentation)[http://docs.zentri.com] for full ZentriOS documentation, including a complete description of all commands and variables.
 
 ### Interactive Network Mode
 
-At a command line in the wiconnectpy working copy directory, run the command:
+At a command line in the zentriospy working copy directory, run the command:
 ```
-python wiconnectpy.py mymodule
+python zentriospy.py mymodule
 ```
 
-This opens an interactive console similar to a WiConnect serial terminal connection. Issue commands and view the responses. For example:
+This opens an interactive console similar to a ZentriOS serial terminal connection. Issue commands and view the responses. For example:
 
 ```
-.../wiconnectpy>python wiconnectpy.py mymodule
+.../zentriospy>python zentriospy.py mymodule
 Interactive Network Mode
 > get gp u
 !  # Description
@@ -88,14 +88,14 @@ Interactive Network Mode
 
 ### Class Mode with Raw Commands
 
-The following demonstrates wiconnectpy running as a class with raw text commands. 
+The following demonstrates zentriospy running as a class with raw text commands. 
 
-The python code below turns on User LED 1 on an ACKme Mackerel evaluation board:
+The python code below turns on User LED 1 on an Zentri Mackerel evaluation board:
 
 ```
-import wiconnectpy
+import zentriospy
 
-device = wiconnectpy.wiconnectpy(addr='mymodule.local')
+device = zentriospy.zentriospy(addr='mymodule.local')
 
 device("set gpio.init 22 none") 
 device("set gpio.init 22 out") 
@@ -104,11 +104,11 @@ device("gpio_set 22 1")
 
 ```
 
-Supply the URL of the ACKme module as the ``addr`` argument to the ``wiconnectpy.__init__`` function. 
+Supply the URL of the Zentri module as the ``addr`` argument to the ``zentriospy.__init__`` function. 
 
-This returns a device object, representing the ACKme WiConnect device. The device object can then be used for issuing commands. 
+This returns a device object, representing the ZentriOS device. The device object can then be used for issuing commands. 
 
-Any WiConnect command can be issued as the argument when calling the device. The call returns the WiConnect command response.
+Any ZentriOS command can be issued as the argument when calling the device. The call returns the ZentriOS command response.
 
 For example:
 
@@ -116,23 +116,23 @@ For example:
 print device("ls -v") 
 ```
 
-This results in printing a verbose list of files on the WiConnect device.
+This results in printing a verbose list of files on the ZentriOS device.
 
 ### Class Mode with Structured Commands
 
 The python code below uses structured commands. 
 
-Each wiconnect command is represented by a device method.
+Each ZentriOS command is represented by a device method.
 
 The first argument to the device method is a string containing the command parameters.
 
 The second argument, when required, is the data sent immediately after issuing the command. This is required for commands such as `file_create` and `stream_write`. 
 
 ```
-import wiconnectpy
+import zentriospy
 
 file_data = '0123456789'
-device = wiconnectpy.wiconnectpy('mymodule.local')
+device = zentriospy.zentriospy('mymodule.local')
 device.ls("-v")
 device.fcr("blah.txt 10", file_data)
 device.ls("-v")
@@ -146,7 +146,7 @@ device.ls("-v")
  
 File transfers, in response to the `file_create` command, use CRC validation.
 
-File transfer is implemented using HTTP posts to the WiConnect HTTP RESTful server.
+File transfer is implemented using HTTP posts to the ZentriOS HTTP RESTful server.
 
 All HTTP requests use base 64 encoding.
 

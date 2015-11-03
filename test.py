@@ -3,13 +3,13 @@ Created on 22 Jan 2015
 
 @author: Chad
 '''
-import wiconnectpy
+import zentriospy
 import sys
 import random
 import time
 cmd_list = [["ls"], ["scan"], ["ping -g"], ["file_open test_file.txt", "read 0 1000", "close all"], ["gpio_dir 10 out", "gpio_set 10 0", "gpio_set 10 1"], ["get gp u"]]
 
-a = wiconnectpy.wiconnectpy(sys.argv[1])
+a = zentriospy.zentriospy(sys.argv[1])
 print "Testing...\n"
 i = 0
 ecount = 0
