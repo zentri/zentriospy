@@ -2,12 +2,14 @@
 Created on 15 Jan 2015
 
 @author: Chad
+
+Modified for Gecko OS 29 May 2018: Neale
 '''
 import sys
 import requests
 import json
 import base64
-import CRCUtil
+import binascii # for binascii.crc32() function
 
 
 class default_cmd(object):
@@ -19,7 +21,7 @@ class default_cmd(object):
         print self.parent.send_cmd("{} {}".format(self.name, cmd_args), data)
 
 
-class zentriospy(object):
+class gecko_ospy(object):
     '''
     classdocs
     '''
@@ -35,6 +37,18 @@ class zentriospy(object):
         self.url = "http://" + addr + "/command"
 
         self.create_helper_function()
+        
+        self.fcr_options = {
+            "-c": {"name":"crc"          ,"boolean":False   ,"default":""},
+            "-d": {"name":"devicekey"    ,"boolean":True    ,"default":False}, # device unique key           
+            "-e": {"name":"essential"    ,"boolean":True    ,"default":False},
+            "-l": {"name":"location"     ,"boolean":False   ,"default":""},
+            "-p": {"name":"preencrypted" ,"boolean":False   ,"default":""},
+            "-m": {"name":"permissions"  ,"boolean":False   ,"default":""},            
+            "-t": {"name":"type"         ,"boolean":False   ,"default":"0x44"},
+            "-u": {"name":"userencrypt"  ,"boolean":True    ,"default":False}, #user key: system.security_key
+            "-v": {"name":"version"      ,"boolean":False   ,"default":""},
+            }
 
     def __call__(self, cmd_string, data=""):
         cmd = cmd_string.split()[0]
@@ -59,7 +73,6 @@ class zentriospy(object):
             return False
         funcs = funcs.replace(" ", "").split('\r\n')
         for func in funcs:
-            # print func.split(":")
             full_func = func.split(":")[0]
             short_func = func.split(":")[1]
             setattr(self.__class__, full_func, default_cmd(self, full_func))
@@ -68,12 +81,22 @@ class zentriospy(object):
                 setattr(self.__class__, short_func, default_cmd(self, short_func))
 
     def send_cmd(self, command, data=""):
+        jsonData = json.dumps({"command": base64.b64encode(command), 
+                    "flags": 0x7, # command, data and response are base64 encoded
+                    "data": base64.b64encode(data)}) 
+        
         try:
-            a = requests.post(self.url,  data=json.dumps({"command": base64.b64encode(command), "flags": 0x7,
-                                                          "data": base64.b64encode(data)}),
-                              headers={"content-type": "application/json", "accepts": "application/json"}, timeout=10)
+            a = requests.post(
+                            self.url,  
+                            data=jsonData,
+                            headers={
+                                "content-type": "application/json", 
+                                "accepts": "application/json"
+                            }, 
+                            timeout=10
+                            )
             if a.status_code == 200:
-                return base64.b64decode(a.json()["response"]).rstrip()
+                return base64.b64decode(a.json()["response"]).rstrip() # response is correctly base64 encoded
             else:
                 print "Error: {}".format(a.status_code), a.text
 
@@ -122,77 +145,60 @@ class zentriospy(object):
             print "Invalid file size"
             return ""
 
-        crc = hex(CRCUtil.crc16(str(data)))
-        if not file_info["crc"]:
-            file_info["crc"] = crc
+        crc = hex(binascii.crc32(str(data)))
+        crc = crc.rstrip('L') # remove any L at the end
+        
+        if not file_info.get("crc",""):
+            file_info["crc"] = '{}'.format(crc)
         elif str(crc) != file_info["crc"]:
             print "Invalid CRC"
             return ""
+        # command has been changed so that options come after filesize
+        
+        option_str = " -o" # we always open the file this way
+        
+        for option, optD in self.fcr_options.items():
+            if file_info.get(optD["name"],None):
+                    option_str += " {o}".format(o=option)
+                    if not optD["boolean"]:
+                        option_str += " {v}".format(v=file_info[optD["name"]])
 
-        # Reconstruct command string with updated arguments
-        cmd_string = "fcr -o "
-        if file_info["unprotect"] and file_info["essential"]:
-            cmd_string += " -ue"
-        else:
-            if file_info["unprotect"]:
-                cmd_string += " -u"
-            elif file_info["unprotect"]:
-                cmd_string += " -e"
-        if file_info["stream"]:
-            cmd_string += " -o"
-
-        cmd_string += " {} {} {} {} {}".format(file_info["name"], file_info["size"], file_info["version"],
-                                               file_info["type"], file_info["crc"])
-        print cmd_string
+        cmd_string = "fcr {n} {s} {o}".format(n=file_info["name"], s=file_info["size"], o=option_str)
+        print cmd_string #debug
 
         stream_handle = self.send_cmd(cmd_string)
         resp = self.send_write_cmd(stream_handle, len(data), data)
         return resp
 
     def parse_fcr_args(self, cmd_args):
-        # file_create [-[e][u]] [-o] <filename> <size> [<version> [<type> [<crc>]]]
-        file_info = {"essential": False, "unprotect": False, "stream": False, "name": "", "size": "0",
-                     "version": "1.0.0", "type": "0xFE", "crc": ""}
-
-        if "-o" in cmd_args != -1:
-            file_info["stream"] = True
-        if "-u" in cmd_args != -1:
-            file_info["unprotect"] = True
-        if "-e" in cmd_args != -1:
-            file_info["essential"] = True
-        if ("-eu" in cmd_args != -1) or ("-ue" in cmd_args):
-            file_info["essential"] = True
-            file_info["unprotect"] = True
-
-        for i in range(len(cmd_args)):
-            # Find first args that doenst have a "-" is it
-            if cmd_args[i][0] != '-':
-                # get all non flag args
-                a = cmd_args[i:]
-
-                file_info["name"] = a[0]
-                file_info["size"] = a[1]
-                try:
-                    file_info["version"] = a[2]
-                except IndexError:
-                    pass
-                try:
-                    file_info["type"] = a[3]
-                except IndexError:
-                    pass
-                try:
-                    file_info["crc"] = a[4]
-                except IndexError:
-                    pass
-                break
-
+        # file_create [<filename> <size> options]
+        file_info = {"name": cmd_args[0], "size": cmd_args[1]} # name and size are always the first two args in gecko_os
+        
+        lenCmdArgs = len(cmd_args)
+        i = 2
+        while i < lenCmdArgs:
+            cmd_arg = cmd_args[i]
+            optD = self.fcr_options.get(cmd_arg, None)
+            if optD:
+                if optD["boolean"]:
+                    file_info[optD["name"]] = True
+                else: # need the value
+                    if i < lenCmdArgs-1:
+                        i += 1
+                        file_info[optD["name"]] = cmd_args[i]
+            i += 1
         return file_info
-
+    #--------------------- 
 
 if __name__ == "__main__":
+    
+    
     import msvcrt
-    a = zentriospy(sys.argv[1])
-
+    
+    
+    
+    a = gecko_ospy(sys.argv[1])
+    
     prompt = "> "
 
     print "Interactive Network Mode"
@@ -216,7 +222,7 @@ if __name__ == "__main__":
                     data = ""
                     # Capture data
                     # could add a timeout or escape option here
-                    # not that the msvcrt.getwch only works for Windows.  Can use sys.stdin.read(1) for linux
+                    # note that the msvcrt.getwch only works for Windows.  Can use sys.stdin.read(1) for linux
                     while len(data) < int(data_size):
                         cmd_chr = msvcrt.getwch()
                         data += cmd_chr

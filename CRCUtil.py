@@ -1,7 +1,7 @@
 
 import array
 import crcmod
-
+import binascii
 
 
 #!/usr/bin/env python
@@ -9,7 +9,7 @@ import crcmod
 
 # CRC CCITT
 #
-# comes in 3 flavous
+# comes in 3 flavours
 # (XModem)  starting value: 0x0000
 #           starting value: 0xffff
 #           starting value: 0x1d0f
@@ -76,8 +76,14 @@ def reverse_byte_mask(b):
     return chr(b)
 
 def crc32(data):
-    crc32_func = crcmod.mkCrcFun(0x104c11db7, initCrc=0xFFFFFFFF, rev=False, xorOut=0)
-    return crc32_func(map(reverse_byte_mask, array.array('B', data))) & 0xFFFFFFFF
+    #crc32_func = crcmod.mkCrcFun(0x104c11db7, initCrc=0xFFFFFFFF, rev=False, xorOut=0)
+    #return crc32_func(map(reverse_byte_mask, array.array('B', data))) & 0xFFFFFFFF
+    return binascii.crc32(data) & 0xffffffff
+    
+def crc32b(data):
+    crc32_func = crcmod.mkCrcFun(0x104c11db7, initCrc=0, rev=False, xorOut=0xFFFFFFFF)
+    return crc32_func(data) & 0xFFFFFFFF
+    
 
 def crc16(data):
     return CRCCCITT('FFFF').calculate(data)

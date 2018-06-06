@@ -1,19 +1,26 @@
-# The zentriospy module
+# The gecko_ospy module
 
-The zentriospy module is for communicating with a ZentriOS module via the ZentriOS HTTP RESTful server.
+The gecko_ospy module is for communicating with a ZentriOS module via the ZentriOS HTTP RESTful server.
 
 It is written for python 2.7.
 
-## Installing zentriospy
+## Installing gecko_ospy
 
-To install zentriospy, obtain a working copy from:
+To install gecko_ospy, obtain a working copy from:
 
-https://github.com/zentri/zentriospy
+https://github.com/zentri/gecko_ospy
 
-The zentriospy module requires the non-standard but commonly used python requests module. Install with pip or similar:
-```pip install requests```
+The gecko_ospy module requires the non-standard but commonly used python requests module. Install with pip or similar:
+```
+pip install requests
+```
 
-## Setting up the ZentriOS Module
+It also requires the `crcmod` module:
+```
+pip install crcmod
+```
+
+## Setting up the Gecko OS Module
 
 To set up your module to run the HTTP RESTful server, issue the following commands in a serial terminal connected to your module:
 
@@ -21,8 +28,6 @@ To set up your module to run the HTTP RESTful server, issue the following comman
 set wlan.ssid               <YOUR SSID>
 set wlan.passkey            <YOUR PASSWORD>
 set wlan.auto_join.enabled  1    
-set mdns.enabled            1
-set mdns.name mymodule
 set http.server.enabled     1
 set http.server.api_enabled 1
 save
@@ -39,17 +44,15 @@ ZentriOS-2.2.0.12, Built:2015-04-08 20:12:21 for AMW004.3, Board:AMW004-E03.3
 > Security type from probe: WPA2-AES
 Obtaining IPv4 address via DHCP
 IPv4 address: 10.5.6.108
-Starting mDNS
-mDNS domain: mymodule.local
 HTTP and REST API server listening on port: 80
 [Associated]
 ```
 
-The module now accepts HTTP requests from zentriospy.
+The module now accepts HTTP requests from gecko_ospy.
 
-## Running zentriospy
+## Running gecko_ospy
 
-The zentriospy module runs in three possible modes:
+The gecko_ospy module runs in three possible modes:
 
 * Interactive network mode
 * Class mode with raw commands
@@ -59,15 +62,21 @@ See (ZentriOS online documentation)[http://docs.zentri.com] for full ZentriOS do
 
 ### Interactive Network Mode
 
-At a command line in the zentriospy working copy directory, run the command:
+At a command line in the gecko_ospy working copy directory, run the command:
 ```
-python zentriospy.py mymodule
+python gecko_ospy.py mymodule
 ```
+
+Alternatively use the Gecko OS device IP address, e.g.
+```
+python gecko_ospy.py 10.5.6.123
+```
+
 
 This opens an interactive console similar to a ZentriOS serial terminal connection. Issue commands and view the responses. For example:
 
 ```
-.../zentriospy>python zentriospy.py mymodule
+.../gecko_ospy>python gecko_ospy.py mymodule
 Interactive Network Mode
 > get gp u
 !  # Description
@@ -88,14 +97,14 @@ Interactive Network Mode
 
 ### Class Mode with Raw Commands
 
-The following demonstrates zentriospy running as a class with raw text commands. 
+The following demonstrates gecko_ospy running as a class with raw text commands. 
 
 The python code below turns on User LED 1 on an Zentri Mackerel evaluation board:
 
 ```
-import zentriospy
+import gecko_ospy
 
-device = zentriospy.zentriospy(addr='mymodule.local')
+device = gecko_ospy.gecko_ospy(addr='10.5.6.123')
 
 device("set gpio.init 22 none") 
 device("set gpio.init 22 out") 
@@ -104,7 +113,7 @@ device("gpio_set 22 1")
 
 ```
 
-Supply the URL of the Zentri module as the ``addr`` argument to the ``zentriospy.__init__`` function. 
+Supply the URL of the Zentri module as the ``addr`` argument to the ``gecko_ospy.__init__`` function. 
 
 This returns a device object, representing the ZentriOS device. The device object can then be used for issuing commands. 
 
@@ -129,10 +138,10 @@ The first argument to the device method is a string containing the command param
 The second argument, when required, is the data sent immediately after issuing the command. This is required for commands such as `file_create` and `stream_write`. 
 
 ```
-import zentriospy
+import gecko_ospy
 
 file_data = '0123456789'
-device = zentriospy.zentriospy('mymodule.local')
+device = gecko_ospy.gecko_ospy('mymodule.local')
 device.ls("-v")
 device.fcr("blah.txt 10", file_data)
 device.ls("-v")
