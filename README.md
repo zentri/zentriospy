@@ -58,7 +58,7 @@ The gecko_ospy module runs in three possible modes:
 * Class mode with raw commands
 * Class mode with structured commands
 
-See (Gecko OS online documentation)[http://docs.zentri.com] for full  documentation, including a complete description of all commands and variables.
+See [Gecko OS online documentation](http://stage-docs.zentri.com/alpha/gecko-os/4.0/) for full  documentation, including a complete description of all commands and variables.
 
 ### Interactive Network Mode
 
