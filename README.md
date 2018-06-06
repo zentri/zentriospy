@@ -1,6 +1,6 @@
 # The gecko_ospy module
 
-The gecko_ospy module is for communicating with a ZentriOS module via the ZentriOS HTTP RESTful server.
+The gecko_ospy module is for communicating with a Gecko OS module via the Gecko OS HTTP RESTful server.
 
 It is written for python 2.7.
 
@@ -38,9 +38,9 @@ The module response is similar to:
 ```
 Rebooting
 [Disassociated]
-ZentriOS-2.2.0.12, Built:2015-04-08 20:12:21 for AMW004.3, Board:AMW004-E03.3
+Gecko_OS-2.2.0.12, Built:2015-04-08 20:12:21 for AMW004.3, Board:AMW004-E03.3
 [Ready]
-[Associating to zentri]
+[Associating to <YOUR SSID>]
 > Security type from probe: WPA2-AES
 Obtaining IPv4 address via DHCP
 IPv4 address: 10.5.6.108
@@ -58,7 +58,7 @@ The gecko_ospy module runs in three possible modes:
 * Class mode with raw commands
 * Class mode with structured commands
 
-See (ZentriOS online documentation)[http://docs.zentri.com] for full ZentriOS documentation, including a complete description of all commands and variables.
+See (Gecko OS online documentation)[http://docs.zentri.com] for full  documentation, including a complete description of all commands and variables.
 
 ### Interactive Network Mode
 
@@ -73,7 +73,7 @@ python gecko_ospy.py 10.5.6.123
 ```
 
 
-This opens an interactive console similar to a ZentriOS serial terminal connection. Issue commands and view the responses. For example:
+This opens an interactive console similar to a Gecko OS serial terminal connection. Issue commands and view the responses. For example:
 
 ```
 .../gecko_ospy>python gecko_ospy.py mymodule
@@ -115,9 +115,9 @@ device("gpio_set 22 1")
 
 Supply the URL of the Zentri module as the ``addr`` argument to the ``gecko_ospy.__init__`` function. 
 
-This returns a device object, representing the ZentriOS device. The device object can then be used for issuing commands. 
+This returns a device object, representing the Gecko OS device. The device object can then be used for issuing commands. 
 
-Any ZentriOS command can be issued as the argument when calling the device. The call returns the ZentriOS command response.
+Any Gecko OS command can be issued as the argument when calling the device. The call returns the Gecko OS command response.
 
 For example:
 
@@ -125,13 +125,13 @@ For example:
 print device("ls -v") 
 ```
 
-This results in printing a verbose list of files on the ZentriOS device.
+This results in printing a verbose list of files on the Gecko OS device.
 
 ### Class Mode with Structured Commands
 
 The python code below uses structured commands. 
 
-Each ZentriOS command is represented by a device method.
+Each Gecko OS command is represented by a device method.
 
 The first argument to the device method is a string containing the command parameters.
 
@@ -155,7 +155,7 @@ device.ls("-v")
  
 File transfers, in response to the `file_create` command, use CRC validation.
 
-File transfer is implemented using HTTP posts to the ZentriOS HTTP RESTful server.
+File transfer is implemented using HTTP posts to the Gecko OS HTTP RESTful server.
 
 All HTTP requests use base 64 encoding.
 
