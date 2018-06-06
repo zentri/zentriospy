@@ -8,7 +8,7 @@ It is written for python 2.7.
 
 To install gecko_ospy, obtain a working copy from:
 
-https://github.com/zentri/gecko_ospy
+https://github.com/zentri/zentriospy    branch:Gecko_OSpy
 
 The gecko_ospy module requires the non-standard but commonly used python requests module. Install with pip or similar:
 ```
