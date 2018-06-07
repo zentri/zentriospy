@@ -40,7 +40,7 @@ class gecko_ospy(object):
         
         self.fcr_options = {
             "-c": {"name":"crc"          ,"boolean":False   ,"default":""},
-            "-d": {"name":"devicekey"    ,"boolean":True    ,"default":False}, # device unique key           
+            "-d": {"name":"devicekey"    ,"boolean":True    ,"default":False}, # device key           
             "-e": {"name":"essential"    ,"boolean":True    ,"default":False},
             "-l": {"name":"location"     ,"boolean":False   ,"default":""},
             "-p": {"name":"preencrypted" ,"boolean":False   ,"default":""},
@@ -49,6 +49,7 @@ class gecko_ospy(object):
             "-u": {"name":"userencrypt"  ,"boolean":True    ,"default":False}, #user key: system.security_key
             "-v": {"name":"version"      ,"boolean":False   ,"default":""},
             }
+        self.writeProgressMeter = False
 
     def __call__(self, cmd_string, data=""):
         cmd = cmd_string.split()[0]
@@ -123,7 +124,7 @@ class gecko_ospy(object):
             return ""
 
         # Send data in chunks to adhere to memory restrictions on module
-        sys.stdout.write("Progress:   0%")
+        if self.writeProgressMeter: sys.stdout.write("Progress:   0%")
         init_size = float(len(data))
         while data:
             data_chunk = data[:self.MAX_CHUNK_SIZE]
@@ -131,11 +132,11 @@ class gecko_ospy(object):
             if resp != "Success":
                 return ""
             data = data[self.MAX_CHUNK_SIZE:]
+            if self.writeProgressMeter: 
+                progress = (float(len(data)) / init_size) * 100
+                sys.stdout.write("\rProgress: {:3d}%".format(100 - int(progress)))
 
-            progress = (float(len(data)) / init_size) * 100
-            sys.stdout.write("\rProgress: {:3d}%".format(100 - int(progress)))
-
-        sys.stdout.write("\r                     \r")
+        if self.writeProgressMeter: sys.stdout.write("\r                     \r")
         return resp
 
     def send_fcr_cmd(self, cmd_args, data):
@@ -164,7 +165,6 @@ class gecko_ospy(object):
                         option_str += " {v}".format(v=file_info[optD["name"]])
 
         cmd_string = "fcr {n} {s} {o}".format(n=file_info["name"], s=file_info["size"], o=option_str)
-        print cmd_string #debug
 
         stream_handle = self.send_cmd(cmd_string)
         resp = self.send_write_cmd(stream_handle, len(data), data)
@@ -195,6 +195,7 @@ def interactiveNetworkMode():
     import msvcrt
     
     a = gecko_ospy(sys.argv[1])
+    a.writeProgressMeter = True
     
     prompt = "> "
 
