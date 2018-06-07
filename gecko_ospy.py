@@ -188,14 +188,11 @@ class gecko_ospy(object):
                         file_info[optD["name"]] = cmd_args[i]
             i += 1
         return file_info
-    #--------------------- 
+    #------------------------ 
+#----------------------------
+def interactiveNetworkMode():
 
-if __name__ == "__main__":
-    
-    
     import msvcrt
-    
-    
     
     a = gecko_ospy(sys.argv[1])
     
@@ -236,4 +233,13 @@ if __name__ == "__main__":
                 sys.stdout.write(prompt)
     except KeyboardInterrupt:
         sys.stdout.write("\nExiting")
-        sys.exit(0)
+        sys.exit(0)    
+#----------------------------    
+    
+if __name__ == "__main__":
+    interactiveNetworkMode()
+    
+    
+    
+    
+
